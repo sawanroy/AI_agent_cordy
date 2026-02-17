@@ -1,3 +1,4 @@
+import logging
 import psycopg2
 from config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
 
@@ -9,10 +10,13 @@ def get_connection():
 
 
 def init_db():
-    conn = get_connection()
-    cur = conn.cursor()
-
-    cur.execute("""
+    conn = None
+    try:
+        conn = get_connection()
+        with conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
         CREATE TABLE IF NOT EXISTS intelligence (
             id SERIAL PRIMARY KEY,
             source_type TEXT,
@@ -29,19 +33,24 @@ def init_db():
             url TEXT,
             doi_or_patent TEXT
         );
-    """)
-
-    conn.commit()
-    cur.close()
-    conn.close()
+    """
+                )
+    except Exception:
+        logging.exception("Database initialization failed")
+        raise
+    finally:
+        if conn:
+            conn.close()
 
 
 def insert_intelligence(data):
-    conn = get_connection()
-    cur = conn.cursor()
-
-    cur.execute(
-        """
+    conn = None
+    try:
+        conn = get_connection()
+        with conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
         INSERT INTO intelligence (
             source_type, title, entity, year, country,
             summary, price, moq, certifications,
@@ -50,35 +59,41 @@ def insert_intelligence(data):
                   %s, %s, %s, %s,
                   %s, %s, %s, %s)
     """,
-        (
-            data.get("source_type"),
-            data.get("title"),
-            data.get("entity"),
-            data.get("year"),
-            data.get("country"),
-            data.get("summary"),
-            data.get("price"),
-            data.get("moq"),
-            data.get("certifications"),
-            data.get("contact_email"),
-            data.get("phone"),
-            data.get("url"),
-            data.get("doi_or_patent"),
-        ),
-    )
+                    (
+                        data.get("source_type"),
+                        data.get("title"),
+                        data.get("entity"),
+                        data.get("year"),
+                        data.get("country"),
+                        data.get("summary"),
+                        data.get("price"),
+                        data.get("moq"),
+                        data.get("certifications"),
+                        data.get("contact_email"),
+                        data.get("phone"),
+                        data.get("url"),
+                        data.get("doi_or_patent"),
+                    ),
+                )
+    except Exception:
+        logging.exception("Failed to insert intelligence record")
+        raise
+    finally:
+        if conn:
+            conn.close()
 
-    conn.commit()
-    cur.close()
-    conn.close()
 
 def fetch_all():
-    conn = get_connection()
-    cur = conn.cursor()
-
-    cur.execute("SELECT * FROM intelligence;")
-    rows = cur.fetchall()
-
-    cur.close()
-    conn.close()
-
-    return rows
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM intelligence;")
+            rows = cur.fetchall()
+        return rows
+    except Exception:
+        logging.exception("Failed to fetch intelligence records")
+        raise
+    finally:
+        if conn:
+            conn.close()
