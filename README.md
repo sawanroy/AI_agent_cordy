@@ -2,7 +2,8 @@
 
 Overview
 - Small research pipeline: scrape pages, extract structured intelligence, store in Postgres, export CSV.
-- **Auto-downloads PDFs** from research and market pages to `pdfs/research` and `pdfs/market` folders.
+- **Auto-downloads PDFs** from research, market, and vendor pages to separate folders.
+- Three research engines: Academic (research_engine), Market (market_engine), and Vendor/Supplier (supplier_engine).
 - PDF pipeline: find/download PDFs, extract text, build embeddings, and query a local Llama via Ollama.
 
 Requirements
@@ -32,7 +33,8 @@ Run the main pipeline
 
 ```bash
 # ensure DB is reachable and creds are set (export DB_PASSWORD=...)
-# PDFs will be automatically downloaded from scraped pages to pdfs/research and pdfs/market
+# Runs: academic research + market research + vendor research
+# PDFs auto-downloaded to pdfs/research, pdfs/market, and pdfs/vendors
 python3 main.py
 ```
 
@@ -85,9 +87,19 @@ Market Intelligence (NEW)
 - **Auto-downloads PDFs** found on market research pages to `pdfs/market/`.
 - Run automatically with main pipeline or alone via `market_engine.run_market_research()`.
 
+Vendor & Supplier Research (NEW)
+- Searches for vendors, suppliers, manufacturers, and distributors of cordyceps militaris.
+- Queries generated: supplier/distributor/vendor, pricing, MOQ, certifications, export/wholesale info.
+- Extracts vendor contact info, pricing, certifications, and product lines using Llama.
+- Results stored in Postgres with vendor details (name, country, email, phone, website).
+- **Auto-downloads PDFs** from vendor pages to `pdfs/vendors/`.
+- Run automatically with main pipeline or alone via `supplier_engine.run_vendor_research()`.
+
 Files of interest
-- `main.py` — orchestrates scraping, market research, and DB storage.
-- `market_engine.py` — Generate market queries and extract market intelligence (cap, size, competitors).
+- `main.py` — orchestrates scraping, market research, vendor research, and DB storage.
+- `research_engine.py` — Academic research: generate queries, extract info, auto-download PDFs.
+- `market_engine.py` — Market intelligence: cap, size, competitors, forecast, auto-download PDFs.
+- `supplier_engine.py` — Vendor research: find suppliers, pricing, MOQ, certifications, auto-download PDFs.
 - `pdf_pipeline.py` — find/download/extract PDF text.
 - `embed_index.py` — chunking and in-memory embedding index.
 - `llama_qa.py` — retrieval + Ollama Llama QA wrapper.

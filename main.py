@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from config import TAVILY_API_KEY
 from research_engine import generate_queries, extract_structured, auto_download_pdfs
 from market_engine import run_market_research
+from supplier_engine import run_vendor_research
 from tavily import TavilyClient
 from db import init_db, insert_intelligence, fetch_all
 from report_generator import export_csv
@@ -75,6 +76,9 @@ def main():
 
     logging.info("Running Market Research Engine...")
     run_market_research("Cordyceps militaris")
+
+    logging.info("Running Vendor/Supplier Research Engine...")
+    run_vendor_research("Cordyceps militaris")
 
     logging.info("Research run complete. Exporting CSV...")
     export_csv()
